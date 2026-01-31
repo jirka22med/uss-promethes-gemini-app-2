@@ -1,0 +1,9 @@
+
+{
+  "name": "USS PROMETHEUS Tactical Center",
+  "description": "Vojenské rozhraní pro vice admirála Jiříka s přímým napojením na Gemini 3 Pro a Canvas.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

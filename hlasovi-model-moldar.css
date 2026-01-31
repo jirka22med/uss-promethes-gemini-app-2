@@ -1,0 +1,273 @@
+/* ═══════════════════════════════════════════════════════════
+   🔊 HLASOVÝ MODEL MODAL - USS PROMETHEUS v6.0
+   Google Cloud TTS Voice Selector
+   ═══════════════════════════════════════════════════════════ */
+
+/* Modal Overlay */
+#voice-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#voice-modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Modal Container */
+#voice-modal {
+    background: linear-gradient(145deg, #0a1929, #001e3c);
+    border: 2px solid var(--indigo-primary);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 95vw;           /* ✅ Téměř celá šířka obrazovky */
+    width: 1200px;             /* ✅ Max šířka pro velké monitory */
+    max-height: 90vh;          /* ✅ Max výška (90% obrazovky) */
+    overflow-y: auto;          /* ✅ Scroll pro dlouhý obsah */
+    box-shadow: 
+        0 0 40px rgba(99, 102, 241, 0.4),
+        0 20px 60px rgba(0, 0, 0, 0.8);
+    animation: modalSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+/* ✅ Custom scrollbar */
+#voice-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+#voice-modal::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 4px;
+}
+
+#voice-modal::-webkit-scrollbar-thumb {
+    background: var(--indigo-primary);
+    border-radius: 4px;
+}
+
+#voice-modal::-webkit-scrollbar-thumb:hover {
+    background: var(--emerald);
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: scale(0.8) translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header */
+.voice-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--indigo-primary);
+}
+
+.voice-modal-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    color: var(--indigo-primary);
+    margin: 0;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.voice-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--slate-text);
+    font-size: 1.8rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.voice-modal-close:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+/* Voice Grid */
+.voice-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);  /* ✅ 3 karty v řadě */
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Voice Card */
+.voice-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid var(--border-main);
+    border-radius: 8px;
+    padding: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.voice-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.voice-card:hover::before {
+    left: 100%;
+}
+
+.voice-card:hover {
+    border-color: var(--indigo-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(99, 102, 241, 0.3);
+}
+
+.voice-card.active {
+    border-color: var(--emerald);
+    background: rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.voice-card.active::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    background: var(--emerald);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.voice-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.voice-card-icon {
+    font-size: 1.5rem;
+}
+
+.voice-card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--slate-text);
+    margin: 0;
+}
+
+.voice-card-type {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--indigo-primary);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.voice-card-description {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: var(--slate-text);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Current Voice Indicator */
+.voice-current {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid var(--indigo-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: var(--indigo-primary);
+    text-align: center;
+}
+
+.voice-current strong {
+    color: var(--emerald);
+}
+
+/* Footer Info */
+.voice-modal-footer {
+    border-top: 1px solid var(--border-main);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.voice-modal-info {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: var(--slate-text);
+    line-height: 1.6;
+}
+
+.voice-modal-info strong {
+    color: var(--indigo-primary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .voice-grid {
+        grid-template-columns: repeat(2, 1fr);  /* ✅ 2 karty na tabletech */
+    }
+    
+    #voice-modal {
+        width: 95vw;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .voice-grid {
+        grid-template-columns: 1fr;  /* ✅ 1 karta na mobilech */
+    }
+    
+    #voice-modal {
+        padding: 1.5rem;
+        max-height: 85vh;
+    }
+}

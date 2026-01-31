@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USS PROMETHEUS | Tactical Operations v5.8</title>
+     <link rel="icon" href="https://img41.rajce.idnes.cz/d4102/19/19244/19244630_db82ad174937335b1a151341387b7af2/images/image_300x3001_2.jpg?ver=1" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="multi-file-styles.css">
+    <link rel="stylesheet" href=" hlasovi-model-moldar.css">
+   
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@1.38.0",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react/": "https://esm.sh/react@^19.2.3/"
+      }
+    }
+    </script>
+</head>
+<body class="prometheus-body">
+    <div id="app" class="app-container">
+        
+        <!-- MODUL: CHAT SIDEBAR -->
+        <div id="chat-sidebar" class="chat-sidebar">
+            <header class="tactical-header">
+                <div class="ship-id">
+                    <div class="pulse-bar"></div>
+                    <div>
+                        <h1>USS PROMETHEUS</h1>
+                        <p>Tactical Command Center v5.8</p>
+                    </div>
+                </div>
+                <div class="header-controls">
+                    <button id="manual-canvas-btn" class="btn-iconic" title="Taktická obrazovka">
+                        <span>🖥️ Taktik</span>
+                    </button>
+
+                    <button id="relink-api-btn" class="btn-iconic status-btn" title="Kalibrace">
+                        <div id="api-status-dot" class="status-dot alert"></div>
+                        <span>Rekalibrovat</span>
+                    </button>
+                    
+                    <button id="voice-toggle" class="btn-iconic">
+                        <div id="voice-indicator" class="status-dot"></div>
+                        <span>Audio</span>
+                    </button>
+                    
+                    <button id="hlasovi-model-toggle" class="btn-iconic">
+                        <div id="hlasovi-model-indicator" class="status-dot"></div>
+                        <span>nastavení 🔊 </span>
+                    </button>
+                    
+                    <select id="model-selector" class="bridge-select">
+                        <option value="gemini-3-flash-preview">gemini-3 flash</option>
+                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                    </select>
+                </div>
+            </header>
+
+            <div id="chat-messages" class="message-display">
+                <div class="initial-scan">
+                    [ STATUS: SCANNING SHIP SYSTEMS... ]
+                </div>
+            </div>
+
+            <!-- ✅ ROZŠÍŘENÝ FILE PREVIEW - MULTIPLE FILES -->
+            <div id="file-preview-container" class="file-preview-multi hidden">
+                <div class="file-preview-header">
+                    <span id="file-count-display">0 SOUBORŮ</span>
+                    <button id="clear-all-files-btn" class="btn-clear-all">VYMAZAT VŠE</button>
+                </div>
+                <div id="file-preview-list" class="file-preview-grid"></div>
+            </div>
+
+            <div class="ship-stats">
+                <div class="stat-item"><span>CORE:</span> <span id="stat-core" class="emerald">100%</span></div>
+                <div class="stat-item"><span>SHIELDS:</span> <span id="stat-shields" class="indigo">98%</span></div>
+                <div class="stat-item"><span>SIGNAL:</span> <span id="stat-signal" class="amber">OPTIMAL</span></div>
+            </div>
+
+            <footer class="input-area">
+                <form id="chat-form" class="bridge-form">
+                    <!-- ✅ MULTIPLE FILE INPUT -->
+                    <input type="file" id="file-input" class="hidden" accept="image/*,.pdf,.txt,.js,.py,.html,.json,.css,.md" multiple>
+                    <button type="button" id="attach-btn" class="btn-attach" title="Přiložit soubory (max 10)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    </button>
+                    <input type="text" id="chat-input" placeholder="Zadejte strategický rozkaz..." class="input-bridge" autocomplete="off">
+                    <button type="submit" id="send-btn" class="btn-vyslat">Vyslat</button>
+                </form>
+            </footer>
+        </div>
+
+        <!-- CANVAS PANEL -->
+        <div id="canvas-panel" class="canvas-panel hidden">
+            <header class="canvas-header">
+                <div class="canvas-status">
+                    <div class="ping-dot"></div>
+                    <span id="canvas-title">Tactical Output</span>
+                </div>
+                <div class="canvas-actions">
+                    <div class="view-tabs">
+                        <button id="view-code-btn" class="tab-btn active">KÓD</button>
+                        <button id="view-preview-btn" class="tab-btn">NÁHLED</button>
+                    </div>
+                    
+                    <div class="action-group">
+                        <button id="edit-canvas-btn" class="btn-action">
+                            <span>✏️</span> UPRAVIT
+                        </button>
+                        <button id="save-canvas-btn" class="btn-action btn-save hidden">
+                            <span>💾</span> ULOŽIT
+                        </button>
+                        <button id="ai-assist-btn" class="btn-action btn-ai">
+                            <span>🤖</span> AI ASISTENT
+                        </button>
+                    </div>
+                    
+                    <button id="close-canvas-btn" class="btn-exit">Zavřít</button>
+                </div>
+            </header>
+            <div id="canvas-container" class="canvas-body scanning">
+                <textarea id="canvas-editor" readonly class="code-editor" spellcheck="false"></textarea>
+                <div id="canvas-preview" class="hidden preview-frame"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODÁLY -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 🔧 KALIBRACE API MODAL - ENHANCED WITH PASSWORD MASKING -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div id="calibration-modal" class="modal-overlay hidden">
+    <div class="modal-content calibration-modal">
+        <header class="modal-header">
+            <h2>🔧 Kalibrace Jádra API</h2>
+            <button id="close-calibration">✕</button>
+        </header>
+        <div class="modal-body">
+            <p class="mono-msg">> MANUÁLNÍ AUTORIZACE PROTOKOLU...</p>
+            
+            <!-- GEMINI API KEY -->
+            <div class="input-group">
+                <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span>🤖 GEMINI API KLÍČ:</span>
+                    <button id="toggle-gemini-visibility" class="btn-toggle-visibility">
+                        <span id="gemini-eye-icon">👁️</span> Zobrazit
+                    </button>
+                </label>
+                <input 
+                    type="password" 
+                    id="manual-api-key-input" 
+                    placeholder="AIzaSy..."
+                    autocomplete="off"
+                    style="width: 100%;"
+                >
+            </div>
+            
+            <!-- SERPAPI KEY -->
+            <div class="input-group">
+                <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span>🔍 SERPAPI KLÍČ:</span>
+                    <button id="toggle-serpapi-visibility" class="btn-toggle-visibility">
+                        <span id="serpapi-eye-icon">👁️</span> Zobrazit
+                    </button>
+                </label>
+                <input 
+                    type="password" 
+                    id="serpapi-key-input" 
+                    placeholder="váš_serpapi_klíč"
+                    autocomplete="off"
+                    style="width: 100%;"
+                >
+                <small style="color: var(--slate-text); font-size: 9px; margin-top: 0.3rem; display: block; font-family: 'Fira Code', monospace;">
+                    💡 Najdeš na https://serpapi.com/manage-api-key
+                </small>
+            </div>
+            
+            <!-- TLAČÍTKA -->
+            <button id="save-manual-key-btn" class="btn-primary">
+                💾 Uložit Konfiguraci
+            </button>
+            
+            <!-- STATUS PANEL -->
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-main);">
+                <p style="font-size: 10px; color: var(--slate-text); margin-bottom: 0.8rem; font-family: 'Orbitron', sans-serif; letter-spacing: 0.1em;">
+                    📊 AKTUÁLNÍ STAV SYSTÉMU:
+                </p>
+                <div id="config-status" style="font-family: 'Fira Code', monospace; font-size: 10px; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Gemini API:</span>
+                        <span id="gemini-status" class="red">❌ Nenastaveno</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>SerpAPI:</span>
+                        <span id="serpapi-status" class="red">❌ Nenastaveno</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ✅ TOGGLE VISIBILITY BUTTON */
+.btn-toggle-visibility {
+    padding: 0.2rem 0.5rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-main);
+    border-radius: 4px;
+    color: var(--slate-text);
+    font-family: 'Fira Code', monospace;
+    font-size: 9px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-toggle-visibility:hover {
+    border-color: var(--indigo-primary);
+    color: var(--indigo-primary);
+}
+
+.btn-toggle-visibility:active {
+    transform: scale(0.95);
+}
+</style>
+
+    <div id="ai-assistant-modal" class="modal-overlay hidden">
+        <div class="modal-content ai-modal">
+            <header class="modal-header">
+                <h2>AI ASISTENT</h2>
+                <button id="close-ai-modal">✕</button>
+            </header>
+            <div class="modal-body">
+                <div id="current-code-preview" class="code-box"></div>
+                <textarea id="ai-instructions-input" placeholder="Instrukce pro AI..."></textarea>
+                <div class="modal-footer">
+                    <button id="cancel-ai-btn">Zrušit</button>
+                    <button id="send-to-ai-btn" class="btn-primary">🤖 Upravit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <!-- ═══════════════════════════════════════════════════════════
+     🎙️ HLASOVÝ MODAL - USS PROMETHEUS v6.3 FINAL
+     Voice Selection Interface (PRODUCTION READY)
+     Pouze reálně existující hlasy pro cs-CZ
+     ═══════════════════════════════════════════════════════════ -->
+
+<div id="voice-modal-overlay" class="voice-modal-overlay">
+    <div id="voice-modal" class="voice-modal">
+        <div class="voice-modal-header">
+            <h2>🎙️ VÝBĚR HLASOVÉHO MODELU</h2>
+            <button class="voice-modal-close" id="voice-modal-close">✕</button>
+        </div>
+        
+        <!-- Current Voice Display -->
+        <div class="voice-current">
+            Aktuální hlas: <strong id="current-voice-display">cs-CZ-Wavenet-B</strong>
+        </div>
+        
+        <!-- Voice Grid -->
+        <div class="voice-grid">
+            
+            <!-- ═══════════════════════════════════════════════════════════
+                 ⚡ NEURAL2 - NEJVYŠŠÍ KVALITA (pouze 1 hlas pro cs-CZ)
+                 ═══════════════════════════════════════════════════════════ -->
+            
+            <div class="voice-card" data-voice="neural_f" data-voice-name="cs-CZ-Neural2-A">
+                <div class="voice-card-header">
+                    <span class="voice-card-icon">⚡</span>
+                    <h3 class="voice-card-title">Neural2 Ženský</h3>
+                </div>
+                <div class="voice-card-type">NEURAL2 (Premium AI)</div>
+                <p class="voice-card-description">
+                    Nejkvalitnější ženský hlas. Prémiová AI technologie s nejvyšší věrností a přirozeností.
+                </p>
+            </div>
+            
+            <!-- ═══════════════════════════════════════════════════════════
+                 🎯 WAVENET - VYSOKÁ KVALITA (2 hlasy)
+                 ═══════════════════════════════════════════════════════════ -->
+            
+            <div class="voice-card active" data-voice="wavenet_m" data-voice-name="cs-CZ-Wavenet-B">
+                <div class="voice-card-header">
+                    <span class="voice-card-icon">🎯</span>
+                    <h3 class="voice-card-title">WaveNet Mužský</h3>
+                </div>
+                <div class="voice-card-type">WAVENET (Vysoká kvalita)</div>
+                <p class="voice-card-description">
+                    Osvědčený mužský hlas. WaveNet technologie s autoritativním a přirozeným projevem.
+                </p>
+            </div>
+            
+            <div class="voice-card" data-voice="wavenet_f" data-voice-name="cs-CZ-Wavenet-A">
+                <div class="voice-card-header">
+                    <span class="voice-card-icon">🎯</span>
+                    <h3 class="voice-card-title">WaveNet Ženský</h3>
+                </div>
+                <div class="voice-card-type">WAVENET (Vysoká kvalita)</div>
+                <p class="voice-card-description">
+                    Osvědčený ženský hlas. WaveNet technologie s profesionálním a příjemným zabarvením.
+                </p>
+            </div>
+            
+            <!-- ═══════════════════════════════════════════════════════════
+                 ⚙️ STANDARD - RYCHLÉ ODPOVĚDI (1 hlas)
+                 ═══════════════════════════════════════════════════════════ -->
+            
+            <div class="voice-card" data-voice="standard_f" data-voice-name="cs-CZ-Standard-A">
+                <div class="voice-card-header">
+                    <span class="voice-card-icon">⚙️</span>
+                    <h3 class="voice-card-title">Standard (rychlý)</h3>
+                </div>
+                <div class="voice-card-type">STANDARD (Nízká latence)</div>
+                <p class="voice-card-description">
+                    Nejrychlejší odezva. Základní ženský hlas vhodný pro krátké zprávy a systémová hlášení.
+                </p>
+            </div>
+            
+        </div>
+        
+        <!-- Footer -->
+        <div class="voice-modal-footer">
+            <div class="voice-modal-info">
+                <strong>⚡ Neural2-A:</strong> Nejvyšší kvalita - pouze ženský hlas dostupný pro češtinu.<br>
+                <strong>🎯 WaveNet A+B:</strong> Osvědčená vysoká kvalita - ženský i mužský hlas.<br>
+                <strong>⚙️ Standard-A:</strong> Nejrychlejší odezva - základní ženský hlas.<br>
+                <br>
+                💡 <strong>Poznámka:</strong> Hlasy Chirp 3 HD a Neural2 mužský zatím nejsou pro češtinu dostupné.
+            </div>
+        </div>
+    </div>
+</div>
+    
+    
+    <script type="module" src="serpapi-search.js"></script>
+    <script type="module" src="system-prompt.js"></script>
+    <script type="module" src="gemini-api.js"></script>
+    <script type="module" src="canvas-editor.js"></script>
+    <script type="module" src="google-cloud-tts.js"></script>
+    <script type="module" src="script.js"></script>
+    <script type="module" src="devtools-prometheus.js"></script>
+    <script type="module" src="voice-modal.js"></script>
+</body>
+</html>

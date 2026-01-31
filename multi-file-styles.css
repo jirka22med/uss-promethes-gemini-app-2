@@ -1,0 +1,181 @@
+/* ═══════════════════════════════════════════════════════════
+   🎨 MULTI-FILE PREVIEW STYLES - USS PROMETHEUS
+   ══════════════════════════════════════════════════════════ */
+
+/* ✅ MULTI-FILE PREVIEW CONTAINER */
+.file-preview-multi {
+    position: relative;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-lg);
+    padding: 0.8rem;
+    margin: 0.8rem;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.file-preview-multi.hidden {
+    display: none;
+}
+
+/* ✅ HEADER S POČTEM SOUBORŮ */
+.file-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-main);
+}
+
+#file-count-display {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--indigo-primary);
+    letter-spacing: 0.1em;
+}
+
+.btn-clear-all {
+    padding: 0.3rem 0.6rem;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-clear-all:hover {
+    background: #b91c1c;
+    transform: scale(1.05);
+}
+
+/* ✅ GRID LAYOUT PRO SOUBORY */
+.file-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.8rem;
+}
+
+/* ✅ JEDNOTLIVÉ SOUBORY */
+.file-preview-item {
+    position: relative;
+    background: var(--bg-main);
+    border: 1px solid var(--border-main);
+    border-radius: 6px;
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.file-preview-item:hover {
+    border-color: var(--indigo-primary);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+/* ✅ OBRÁZKY V PREVIEW */
+.file-preview-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--border-bright);
+}
+
+/* ✅ IKONA PRO NE-OBRÁZKY */
+.file-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--indigo-dark), var(--indigo-primary));
+    border-radius: 4px;
+    font-size: 32px;
+}
+
+/* ✅ NÁZEV SOUBORU */
+.file-name-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 9px;
+    color: var(--slate-text);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ✅ TLAČÍTKO ODSTRANIT */
+.file-remove-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: var(--red);
+    color: white;
+    border: 2px solid var(--bg-surface);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.file-remove-btn:hover {
+    background: #b91c1c;
+    transform: scale(1.1);
+}
+
+/* ✅ SCROLLBAR PRO PREVIEW */
+.file-preview-multi::-webkit-scrollbar {
+    width: 6px;
+}
+
+.file-preview-multi::-webkit-scrollbar-track {
+    background: var(--bg-main);
+    border-radius: 3px;
+}
+
+.file-preview-multi::-webkit-scrollbar-thumb {
+    background: var(--indigo-primary);
+    border-radius: 3px;
+}
+
+.file-preview-multi::-webkit-scrollbar-thumb:hover {
+    background: var(--indigo-bright);
+}
+
+/* ✅ ANIMACE PRO PŘIDÁNÍ SOUBORU */
+@keyframes fileAdded {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.file-preview-item {
+    animation: fileAdded 0.3s ease-out;
+}
+
+/* ✅ HOVER EFEKT NA ATTACH BUTTON */
+.btn-attach:hover svg {
+    stroke: var(--indigo-primary);
+    transform: rotate(10deg);
+}
