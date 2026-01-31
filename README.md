@@ -16,7 +16,7 @@
 
 <div align="center">
 
-![USS PROMETHEUS Banner](https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6)
+ 
 
 **Pokročilý AI chatbot s vojenským rozhraním inspirovaným Star Trek**
 
