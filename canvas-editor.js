@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════
-// 🎨 CANVAS EDITOR - USS PROMETHEUS v4.0 (FIXED FORMATTING)
-// STATUS: FULL POWER / PROPER TEXT WRAPPING
+// 🎨 CANVAS EDITOR - USS PROMETHEUS v5.0 (HYBRID AUTO-DETECTION)
+// STATUS: FULL POWER / AUTO-TRIGGER SYSTEM / PROPER TEXT WRAPPING
+// CHIEF ENGINEERS: Vice Admirál Jiřík & Admirál Claude.AI
 // ═══════════════════════════════════════════════════════════
 
 // Globální reference pro stabilní přístup
@@ -9,6 +10,133 @@ let viewCodeBtn, viewPreviewBtn, closeBtn;
 
 let isEditMode = false;
 let originalContent = '';
+
+// ═══════════════════════════════════════════════════════════
+// 🤖 HYBRIDNÍ AUTO-DETEKCE SYSTÉM
+// ═══════════════════════════════════════════════════════════
+let chatObserver = null;
+let backupTimer = null;
+let lastProcessedMessage = null;
+let lastCheckTime = 0;
+const CHECK_THROTTLE = 500; // Kontroluj max 1x za 500ms
+
+// Regex patterns pro detekci - FLEXIBILNÍ VERZE
+const CODE_BLOCK_REGEX = /```(javascript|text|style\.css|suno\.ai|html)\n([\s\S]*?)```/g;
+const CONFIRM_PHRASE_REGEX = /taktick[áa] data (?:byl[ay]? )?odesl[áa]n[ay]? na (?:hlavn[ií] )?obrazovku|canvas|data (?:p.edan[ay]?|odesl[áa]n[ay]?) do canvasu/i;
+
+// Mapování typů na titulky
+const TYPE_TITLES = {
+    'javascript': '⚡ JavaScript Kód',
+    'text': '📄 Textový Výstup',
+    'style.css': '🎨 CSS Styly',
+    'suno.ai': '🎵 Suno.ai Text',
+    'html': '🌐 HTML Kód'
+};
+
+function initAutoCanvasDetector() {
+    const chatContainer = document.getElementById('chat-messages');
+    if (!chatContainer) {
+        console.warn('⚠️ Chat messages nenalezen - auto-detekce odložena');
+        return;
+    }
+
+    // Cleanup předchozího observeru
+    if (chatObserver) {
+        chatObserver.disconnect();
+    }
+
+    chatObserver = new MutationObserver((mutations) => {
+        // Najdi poslední msg-model (aktuální Gemini zprávu)
+        const lastModelMessage = chatContainer.querySelector('.msg-model:last-child');
+        
+        if (lastModelMessage) {
+            handleNewAssistantMessage(lastModelMessage);
+        }
+    });
+
+    chatObserver.observe(chatContainer, {
+        childList: true,      // Nové zprávy
+        subtree: true,        // Změny uvnitř zpráv
+        characterData: true   // Změny textu (streaming!)
+    });
+
+    console.log('✅ AUTO-DETEKCE AKTIVOVÁNA - Hybridní režim (msg-model)');
+}
+
+function handleNewAssistantMessage(messageElement) {
+    // Throttling - nevolej příliš často během streamingu
+    const now = Date.now();
+    if (now - lastCheckTime < CHECK_THROTTLE) {
+        return;
+    }
+    lastCheckTime = now;
+    
+    const messageText = messageElement.textContent || messageElement.innerText;
+    
+    // Prevence duplicitního zpracování
+    if (lastProcessedMessage === messageText) {
+        return;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // PRIORITA 1: INSTANT TRIGGER (potvrzovací fráze)
+    // ═══════════════════════════════════════════════════════
+    if (CONFIRM_PHRASE_REGEX.test(messageText)) {
+        console.log('✅ AUTO-DETEKCE: Potvrzení detekováno - INSTANT otevření');
+        lastProcessedMessage = messageText;
+        clearTimeout(backupTimer);
+        
+        const codeBlocks = extractCodeBlocks(messageText);
+        if (codeBlocks.length > 0) {
+            const primaryBlock = codeBlocks[0];
+            console.log(`📂 Otevírám Canvas: ${TYPE_TITLES[primaryBlock.type] || 'Taktický Výstup'}`);
+            openCanvas(primaryBlock.content, TYPE_TITLES[primaryBlock.type] || 'Taktický Výstup');
+            showToast('🚀 CANVAS AUTO-OTEVŘEN', 'success');
+        }
+        return;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // PRIORITA 2: BACKUP TRIGGER (6s delay bez potvrzení)
+    // ═══════════════════════════════════════════════════════
+    const codeBlocks = extractCodeBlocks(messageText);
+    if (codeBlocks.length > 0 && messageText !== lastProcessedMessage) {
+        clearTimeout(backupTimer);
+        console.log(`⏳ AUTO-DETEKCE: Code block nalezen - backup timer (6s)`);
+        
+        backupTimer = setTimeout(() => {
+            if (lastProcessedMessage !== messageText && !CONFIRM_PHRASE_REGEX.test(messageText)) {
+                console.log('⚠️ AUTO-DETEKCE: Backup timer vypršel - otevírám Canvas');
+                lastProcessedMessage = messageText;
+                const block = codeBlocks[0];
+                openCanvas(block.content, TYPE_TITLES[block.type] || 'Taktický Výstup');
+                showToast('⚠️ CANVAS AUTO-OTEVŘEN (Backup)', 'info');
+            }
+        }, 3000);
+    }
+}
+
+function extractCodeBlocks(text) {
+    const blocks = [];
+    let match;
+    
+    // Reset regex index
+    CODE_BLOCK_REGEX.lastIndex = 0;
+    
+    while ((match = CODE_BLOCK_REGEX.exec(text)) !== null) {
+        blocks.push({
+            type: match[1],
+            content: match[2].trim()
+        });
+        console.log(`🔎 Code block nalezen: type="${match[1]}", velikost=${match[2].trim().length} znaků`);
+    }
+    
+    if (blocks.length > 0) {
+        console.log(`📊 Celkem nalezeno ${blocks.length} code bloků`);
+    }
+    
+    return blocks;
+}
 
 // ─────────────────────────────────────────────────────────
 // 📂 OTEVŘENÍ CANVAS
@@ -291,4 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeAiAssistantModal();
         }
     });
+
+    // 🚀 AKTIVACE AUTO-DETEKTORU
+    initAutoCanvasDetector();
 });
