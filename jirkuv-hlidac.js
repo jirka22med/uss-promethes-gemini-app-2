@@ -46,12 +46,12 @@
 * └─────────────────────────────────────────────────────────┘*
 **************************************************************
 * ┌─────────────────────────────────────────────────────────┐*
-* │ 🔒 IIFE SECURITY PATTERN                                 │*
+* │ 🔒 IIFE SECURITY PATTERN                                │*
 * ├─────────────────────────────────────────────────────────┤*
-* │ Security:            ⭐⭐⭐⭐⭐ (5/5)                      │*
-* │ Encapsulation:       ⭐⭐⭐⭐⭐ (5/5)                      │*
-* │ Best Practices:      ⭐⭐⭐⭐⭐ (5/5)                      │*
-* │ Production-ready:    ⭐⭐⭐⭐⭐ (5/5)                      │*
+* │ Security:            ⭐⭐⭐⭐⭐ (5/5)                 │*
+* │ Encapsulation:       ⭐⭐⭐⭐⭐ (5/5)                 │*
+* │ Best Practices:      ⭐⭐⭐⭐⭐ (5/5)                 │*
+* │ Production-ready:    ⭐⭐⭐⭐⭐ (5/5)                 │*
 * ├─────────────────────────────────────────────────────────┤*
 * │ ZÁVĚR: Tohle je TEXTBOOK example jak izolovat kód!      │*
 * │        Používá se v jQuery, Lodash, všech velkých       │*
@@ -61,11 +61,11 @@
 * ┌─────────────────────────────────────────────────────────┐*
 * │ 🏆 HODNOCENÍ DOKUMENTACE                                │*
 * ├─────────────────────────────────────────────────────────┤*
-* │ Přehlednost:         ⭐⭐⭐⭐⭐ (5/5)                      │*
-* │ Informační hodnota:  ⭐⭐⭐⭐⭐ (5/5)                      │*
-* │ Professional look:   ⭐⭐⭐⭐⭐ (5/5)                      │*
-* │ Vizuální appeal:     ⭐⭐⭐⭐⭐ (5/5)                      │*
-* │ Použitelnost:        ⭐⭐⭐⭐⭐ (5/5)                      │*
+* │ Přehlednost:         ⭐⭐⭐⭐⭐ (5/5)                 │*
+* │ Informační hodnota:  ⭐⭐⭐⭐⭐ (5/5)                 │*
+* │ Professional look:   ⭐⭐⭐⭐⭐ (5/5)                 │*
+* │ Vizuální appeal:     ⭐⭐⭐⭐⭐ (5/5)                 │*
+* │ Použitelnost:        ⭐⭐⭐⭐⭐ (5/5)                 │*
 * ├─────────────────────────────────────────────────────────┤*
 * │ ZÁVĚR: Tohle je UČEBNICOVÝ příklad jak dokumentovat     │*
 * │        JavaScript projekty! Bral bych tohle jako        │*
@@ -849,3 +849,4 @@ window.updateLogDisplay = function() {
     // Spustit inicializaci
     initializeLogger();
 })();
+
