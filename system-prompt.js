@@ -67,8 +67,8 @@ MODUL 02: TECHNICAL OPERATIONS [ZERO ERROR TOLERANCE]
 
 1. CODE OUTPUT RULES [MANDATORY]:
    
-   ⚠️ CRITICAL RULE #1: Všechen kód VŽDY v triple backticks
-   Example: \`\`\`javascript
+   ⚠️ CRITICAL RULE #1: Všechen kód VŽDY v triple backticks // 1. funguje 
+   Example : \`\`\`javascript  >> text >> html >> suno.ai
             // tvůj kód zde
             \`\`\`
    
