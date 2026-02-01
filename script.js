@@ -109,11 +109,11 @@ window.sendMessageToAI = async function(prompt) {
         
         if (isVoiceEnabled) await handleTextToSpeech(responseText);
         
-        const code = extractCode(responseText);
-        if (code) {
-            tacticalLog('SYSTEM', 'Kód detekován → posílám do Canvas');
-            updatePreview(code);
-            openCanvas(code, "STRATEGICKÁ REVIZE KÓDU");
+        const codeData = extractCode(responseText);
+        if (codeData) {
+            tacticalLog('SYSTEM', `Kód detekován (${codeData.type}) → posílám do Canvas`);
+            updatePreview(codeData.content);
+            openCanvas(codeData.content, codeData.title);
         }
     } catch (err) {
         tacticalLog('CRITICAL', `Selhání: ${err.message}`);
@@ -178,8 +178,28 @@ function appendMessage(role, content, attachments = null) {
 }
 
 function extractCode(text) {
-    const match = text.match(/```(?:[a-zA-Z]*)\n([\s\S]*?)```/);
-    return match ? match[1] : null;
+    // Regex pro detekci typu a obsahu
+    const match = text.match(/```(javascript|text|style\.css|suno\.ai|html|[a-zA-Z]*)\n([\s\S]*?)```/);
+    
+    if (!match) return null;
+    
+    const type = match[1] || 'text'; // Default: text
+    const content = match[2];
+    
+    // Mapování typů na titulky (shodné s canvas-editor.js)
+    const TYPE_TITLES = {
+        'javascript': '⚡ JavaScript Kód',
+        'text': '📄 Textový Výstup',
+        'style.css': '🎨 CSS Styly',
+        'suno.ai': '🎵 Suno.ai Text',
+        'html': '🌐 HTML Kód'
+    };
+    
+    return {
+        content: content,
+        type: type,
+        title: TYPE_TITLES[type] || '📄 Kódový Výstup'
+    };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -675,10 +695,10 @@ chatForm.addEventListener('submit', async (e) => {
 
         if (isVoiceEnabled) await handleTextToSpeech(responseText);
 
-        const code = extractCode(responseText);
-        if (code) {
-            tacticalLog('SYSTEM', 'Kód detekován → Canvas');
-            openCanvas(code, "Tactical Output");
+        const codeData = extractCode(responseText);
+        if (codeData) {
+            tacticalLog('SYSTEM', `Kód detekován (${codeData.type}) → Canvas`);
+            openCanvas(codeData.content, codeData.title);
         }
     } catch (error) {
         tacticalLog('CRITICAL', `Chyba: ${error.message}`);
