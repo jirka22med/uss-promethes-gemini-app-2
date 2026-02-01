@@ -16,7 +16,7 @@ let originalContent = '';
 // ═══════════════════════════════════════════════════════════
 let chatObserver = null;
 let backupTimer = null;
-let lastProcessedMessage = null;
+let processedMessages = new Set(); // Změna: Set místo jedné proměnné
 let lastCheckTime = 0;
 const CHECK_THROTTLE = 500; // Kontroluj max 1x za 500ms
 
@@ -46,18 +46,31 @@ function initAutoCanvasDetector() {
     }
 
     chatObserver = new MutationObserver((mutations) => {
-        // Najdi poslední msg-model (aktuální Gemini zprávu)
-        const lastModelMessage = chatContainer.querySelector('.msg-model:last-child');
-        
-        if (lastModelMessage) {
-            handleNewAssistantMessage(lastModelMessage);
+        for (const mutation of mutations) {
+            // Pouze nově přidané nody
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && node.classList?.contains('msg-model')) {
+                        // Nová Gemini zpráva přidána
+                        handleNewAssistantMessage(node);
+                    }
+                });
+            }
+            // Změny textu uvnitř existující zprávy (streaming)
+            else if (mutation.type === 'characterData' || mutation.type === 'childList') {
+                const modelMessage = mutation.target.closest?.('.msg-model') || 
+                                   (mutation.target.nodeType === 1 && mutation.target.classList?.contains('msg-model') ? mutation.target : null);
+                if (modelMessage) {
+                    handleNewAssistantMessage(modelMessage);
+                }
+            }
         }
     });
 
     chatObserver.observe(chatContainer, {
-        childList: true,      // Nové zprávy
-        subtree: true,        // Změny uvnitř zpráv
-        characterData: true   // Změny textu (streaming!)
+        childList: true,
+        subtree: true,
+        characterData: true
     });
 
     console.log('✅ AUTO-DETEKCE AKTIVOVÁNA - Hybridní režim (msg-model)');
@@ -73,8 +86,11 @@ function handleNewAssistantMessage(messageElement) {
     
     const messageText = messageElement.textContent || messageElement.innerText;
     
-    // Prevence duplicitního zpracování
-    if (lastProcessedMessage === messageText) {
+    // Vytvoř unikátní ID pro zprávu (hash textu)
+    const messageId = messageText.substring(0, 100) + messageText.length;
+    
+    // Prevence duplicitního zpracování TÉTO zprávy
+    if (processedMessages.has(messageId)) {
         return;
     }
 
@@ -83,15 +99,15 @@ function handleNewAssistantMessage(messageElement) {
     // ═══════════════════════════════════════════════════════
     if (CONFIRM_PHRASE_REGEX.test(messageText)) {
         console.log('✅ AUTO-DETEKCE: Potvrzení detekováno - INSTANT otevření');
-        lastProcessedMessage = messageText;
+        processedMessages.add(messageId);
         clearTimeout(backupTimer);
         
         const codeBlocks = extractCodeBlocks(messageText);
         if (codeBlocks.length > 0) {
             const primaryBlock = codeBlocks[0];
-            console.log(`📂 Otevírám Canvas: ${TYPE_TITLES[primaryBlock.type] || 'Taktický Výstup'}`);
+            console.log(`📂 Aktualizuji Canvas: ${TYPE_TITLES[primaryBlock.type] || 'Taktický Výstup'}`);
             openCanvas(primaryBlock.content, TYPE_TITLES[primaryBlock.type] || 'Taktický Výstup');
-            showToast('🚀 CANVAS AUTO-OTEVŘEN', 'success');
+            showToast('🚀 CANVAS AKTUALIZOVÁN', 'success');
         }
         return;
     }
@@ -100,17 +116,17 @@ function handleNewAssistantMessage(messageElement) {
     // PRIORITA 2: BACKUP TRIGGER (6s delay bez potvrzení)
     // ═══════════════════════════════════════════════════════
     const codeBlocks = extractCodeBlocks(messageText);
-    if (codeBlocks.length > 0 && messageText !== lastProcessedMessage) {
+    if (codeBlocks.length > 0 && !processedMessages.has(messageId)) {
         clearTimeout(backupTimer);
         console.log(`⏳ AUTO-DETEKCE: Code block nalezen - backup timer (6s)`);
         
         backupTimer = setTimeout(() => {
-            if (lastProcessedMessage !== messageText && !CONFIRM_PHRASE_REGEX.test(messageText)) {
-                console.log('⚠️ AUTO-DETEKCE: Backup timer vypršel - otevírám Canvas');
-                lastProcessedMessage = messageText;
+            if (!processedMessages.has(messageId) && !CONFIRM_PHRASE_REGEX.test(messageText)) {
+                console.log('⚠️ AUTO-DETEKCE: Backup timer vypršel - aktualizuji Canvas');
+                processedMessages.add(messageId);
                 const block = codeBlocks[0];
                 openCanvas(block.content, TYPE_TITLES[block.type] || 'Taktický Výstup');
-                showToast('⚠️ CANVAS AUTO-OTEVŘEN (Backup)', 'info');
+                showToast('⚠️ CANVAS AKTUALIZOVÁN (Backup)', 'info');
             }
         }, 3000);
     }
